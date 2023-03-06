@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'Create 3 x Amazon EC2 instance running the Amazon Linux 2 AMI'
+
+Parameters:
+
+    MasterKeyName:
+        Description: 'Name of an existing EC2 KeyPair to enable SSH access to the instance'
+        Type: 'AWS::EC2::KeyPair::KeyName'
+        ConstraintDescription: 'must be the name of an existing EC2 KeyPair.'
+
+
+Resources:
+    AWS-Server01:
+        Type: 'AWS::EC2::Instance'
+        Properties:
+            ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
+            InstanceType: t2.micro
+            KeyName: !Ref MasterKeyName
+            SecurityGroupIds:
+              - !Ref CloudSentryEC2SecurityGroup
+
+    AWS-Server02:
+        Type: 'AWS::EC2::Instance'
+        Properties:
+            ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
+            InstanceType: t2.micro
+            KeyName: !Ref MasterKeyName
+            SecurityGroupIds:
+              - !Ref CloudSentryEC2SecurityGroup
+
+    AWS-Server03:
+        Type: 'AWS::EC2::Instance'
+        Properties:
+            ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
+            InstanceType: t2.micro
+            KeyName: !Ref MasterKeyName
+            SecurityGroupIds:
+              - !Ref CloudSentryEC2SecurityGroup
+
+    CloudSentryEC2SecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+          GroupName: !Join [ '-', [ webapp-security-group, dev ] ]
+          GroupDescription: 'Allow HTTP/HTTPS and SSH inbound and outbound traffic'
+          SecurityGroupIngress:
+            - IpProtocol: tcp
+              FromPort: 80
+              ToPort: 80
+              CidrIp: 0.0.0.0/0
+            - IpProtocol: tcp
+              FromPort: 443
+              ToPort: 443
+              CidrIp: 0.0.0.0/0
+            - IpProtocol: tcp
+              FromPort: 22
+              ToPort: 22
+              CidrIp: 0.0.0.0/0
+
+Outputs:
+    InstanceId:
+        Description: 'InstanceId of the newly created EC2 instance'
+        Value:
+            Ref: EC2Instance
+    AZ:
+        Description: 'Availability Zone of the newly created EC2 instance'
+        Value:
+            'Fn::GetAtt':
+                - EC2Instance
+                - AvailabilityZone
+    PublicDNS:
+        Description: 'Public DNSName of the newly created EC2 instance'
+        Value:
+            'Fn::GetAtt':
+                - EC2Instance
+                - PublicDnsName
+    PublicIP:
+        Description: 'Public IP address of the newly created EC2 instance'
+        Value:
+            'Fn::GetAtt':
+                - EC2Instance
+                - PublicIp
