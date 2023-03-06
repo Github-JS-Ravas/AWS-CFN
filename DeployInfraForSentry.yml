@@ -42,7 +42,7 @@ Resources:
         Type: AWS::EC2::SecurityGroup
         Properties:
           GroupName: !Join [ '-', [ webapp-security-group, dev ] ]
-          GroupDescription: 'Allow HTTP/HTTPS and SSH inbound and outbound traffic'
+          GroupDescription: 'Allow HTTP/HTTPS and SSH inbound & outbound traffic'
           SecurityGroupIngress:
             - IpProtocol: tcp
               FromPort: 80
