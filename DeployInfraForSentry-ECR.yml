@@ -4,7 +4,7 @@ Description: 'Create 1 x Amazon Private ECR and malicious container image'
 
 Parameters:
 
-    MasterKeyName: # Match to TD Resources
+    MasterKeyPair: # Match to TD Resources
         Description: 'Name of an existing EC2 KeyPair to enable SSH access to the instance'
         Type: 'AWS::EC2::KeyPair::KeyName'
         ConstraintDescription: 'Must be the name of an existing EC2 KeyPair.'
@@ -62,15 +62,57 @@ Resources:
             ImageScanningConfiguration: 
                 ScanOnPush: false
 
+    # Create Security Group for EC2 instances
+    ECREC2SecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupName: "ECR EC2 Security Group"
+            GroupDescription: 'Allow HTTPS inbound & outbound traffic'
+            SecurityGroupIngress:
+              - IpProtocol: tcp
+                FromPort: 443
+                ToPort: 443
+                CidrIp: 0.0.0.0/0
+            SecurityGroupEgress:
+              - IpProtocol: tcp
+                FromPort: 0
+                ToPort: 65535
+                CidrIp: 0.0.0.0/0
+
+    #EC2 Role to be assumed and use to create the EC2 resources also allows SSM deployment.
+    EC2ECRRole:
+        Type: 'AWS::IAM::Role'
+        Properties:
+        RoleName: "EC2Role-ECR-TechDay"
+        AssumeRolePolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+    #Instance profile
+    EC2InstanceECRProfile:
+        Type: 'AWS::IAM::InstanceProfile'
+        Properties:
+            Path: /
+            Roles:
+                - !Ref EC2ECRRole
+
     UseDockerToCreateAndPushToECR:
         Type: AWS::EC2::Instance
         Properties:
             SubnetId: !Ref ProtectedPublicSubnet
-            IamInstanceProfile: !Ref EC2InstanceProfile
-            SecurityGroupIds: 
-                - Ref: PublicAccessSecurityGroup
-            ImageId: !Ref LatestLinuxAmiId
-            KeyName: !Ref KeyPair
+            IamInstanceProfile: !Ref EC2InstanceECRProfile
+            SecurityGroupIds:
+              - !Ref ECREC2SecurityGroup
+            ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
+            KeyName: !Ref MasterKeyPair
             InstanceType: t2.medium
             UserData: 
             !Base64 | 
@@ -81,11 +123,11 @@ Resources:
                 sudo service docker start
                 sudo amazon-linux-extras install -y java-openjdk11
                 cd home/ec2-user
-                git clone https://github.com/christophetd/log4shell-vulnerable-app.git
-                wget https://aws-workshop-c1as-cft-templates.s3.amazonaws.com/JNDIExploit.v1.2.zip
-                cd log4shell-vulnerable-app
-                sudo docker build . -t vulnerable-app
-                docker run -p 8080:8080 --name vulnerable-app vulnerable-app     
+                git clone https://github.com/Github-JS-Ravas/AWS-CFN.git
+                wget https://github.com/stinky-fox/my-malware-collection/blob/main/Trojan.W97M.EMOTET.SMTH/113657369490029A5B3A75C70E64C3A618BF478321AEFFBDC2A305458CD1236C.zip
+                cd Docker
+                sudo docker build . -t ECRImageDockerfile
+                docker run -p 8080:8080 --name ECRImageDockerfile ECRImageDockerfile   
 
 Outputs:
     

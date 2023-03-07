@@ -54,6 +54,49 @@ Resources:
             AvailabilityZone: !Ref ProtectedPublicSubnetAZ
             CidrBlock: !Ref ProtectedPublicSubnetCIDR
             MapPublicIpOnLaunch: true
+
+    # Create Security Group for EC2 instances
+    CloudSentryEC2SecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+          GroupName: "Cloud Sentry EC2 Security Group"
+          GroupDescription: 'Allow HTTPS inbound & outbound traffic'
+            SecurityGroupIngress:
+              - IpProtocol: tcp
+                FromPort: 443
+                ToPort: 443
+                CidrIp: 0.0.0.0/0
+            SecurityGroupEgress:
+              - IpProtocol: tcp
+                FromPort: 0
+                ToPort: 65535
+                CidrIp: 0.0.0.0/0
+
+    #EC2 Role to be assumed and use to create the EC2 resources also allows SSM deployment.
+    EC2Role:
+        Type: 'AWS::IAM::Role'
+        Properties:
+        RoleName: "EC2Role-TechDay"
+        AssumeRolePolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            - Effect: Allow
+              Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+
+    #Instance profile
+    EC2InstanceProfile:
+        Type: 'AWS::IAM::InstanceProfile'
+        Properties:
+            Path: /
+            Roles:
+                - !Ref EC2Role
     
     # Create first EC2 machine
     AWS-Server01:
@@ -97,23 +140,6 @@ Resources:
                     sudo yum install -y git
                     cd home/ec2-user
                     wget https://github.com/stinky-fox/my-malware-collection/blob/main/Trojan.W97M.CVE201711882.XQUOOZY/55037DDED7E87A35B980324B49C155D5DB3E4BF1.zip
-
-    # Create Security Group for EC2 instances
-    CloudSentryEC2SecurityGroup:
-        Type: AWS::EC2::SecurityGroup
-        Properties:
-          GroupName: "Cloud Sentry EC2 Security Group"
-          GroupDescription: 'Allow HTTPS inbound & outbound traffic'
-          SecurityGroupIngress:
-            - IpProtocol: tcp
-              FromPort: 443
-              ToPort: 443
-              CidrIp: 0.0.0.0/0
-        SecurityGroupEgress:
-            - IpProtocol: tcp
-              FromPort: 0
-              ToPort: 65535
-              CidrIp: 0.0.0.0/0
 
 Outputs:
     PublicDNS:
