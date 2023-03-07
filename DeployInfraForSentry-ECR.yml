@@ -126,9 +126,9 @@ Resources:
                 git clone https://github.com/Github-JS-Ravas/AWS-CFN.git
                 cd Docker
                 sudo docker build . -t ECRImageDockerfile
-            # docker tag aws-workshop-fargate:latest <‘account’>.dkr.ecr.us-east-1.amazonaws.com/aws-workshop-fargate:latest
-            # docker push <‘account’>.dkr.ecr.us-east-1.amazonaws.com/aws-workshop-fargate:latest
-            
+            # docker tag ECRImageBuild:latest <‘account’>.dkr.ecr.us-east-1.amazonaws.com/ECRImageBuild:latest
+            # docker push <‘account’>.dkr.ecr.us-east-1.amazonaws.com/ECRImageBuild:latest
+
             # docker run -p 8080:8080 --name ECRImageDockerfile ECRImageDockerfile   
 
 Outputs:
