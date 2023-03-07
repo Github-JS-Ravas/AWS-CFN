@@ -124,10 +124,9 @@ Resources:
                 sudo amazon-linux-extras install -y java-openjdk11
                 cd home/ec2-user
                 git clone https://github.com/Github-JS-Ravas/AWS-CFN.git
-                wget https://github.com/stinky-fox/my-malware-collection/blob/main/Trojan.W97M.EMOTET.SMTH/113657369490029A5B3A75C70E64C3A618BF478321AEFFBDC2A305458CD1236C.zip
                 cd Docker
                 sudo docker build . -t ECRImageDockerfile
-                docker run -p 8080:8080 --name ECRImageDockerfile ECRImageDockerfile   
+            # docker run -p 8080:8080 --name ECRImageDockerfile ECRImageDockerfile   
 
 Outputs:
     
