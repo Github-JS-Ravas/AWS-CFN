@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: 'Create 3 x Amazon EC2 instance running the Amazon Linux 2 AMI'
+Description: "Create 3 x Amazon EC2 instance running the Amazon Linux 2 AMI"
 
 Parameters:
 
