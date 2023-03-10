@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: 'Create 1 x Amazon Private ECR and malicious container image'
+Description: "Create 3 x Amazon EC2 instance running the Amazon Linux 2 AMI"
 
 Parameters:
 
@@ -38,6 +38,9 @@ Resources:
     InternetGateway: # Match to TD Resources
         Type: AWS::EC2::InternetGateway
         Properties:
+            Tags:
+              - Key: Name
+                Value: 'VPCIGW'
 
     # Attach the Internet Gateway to the VPC
     InternetGatewayAttachment: # Match to TD Resources
@@ -58,7 +61,7 @@ Resources:
     AWSECRRepo:
         Type: AWS::ECR::Repository
         Properties: 
-            RepositoryName: "TechDayRepo"
+            RepositoryName: td-ecr-repo
             ImageScanningConfiguration: 
                 ScanOnPush: false
 
@@ -68,11 +71,7 @@ Resources:
         Properties:
             GroupName: "ECR EC2 Security Group"
             GroupDescription: 'Allow HTTPS inbound & outbound traffic'
-            SecurityGroupIngress:
-              - IpProtocol: tcp
-                FromPort: 443
-                ToPort: 443
-                CidrIp: 0.0.0.0/0
+            VpcId: !Ref VPC
             SecurityGroupEgress:
               - IpProtocol: tcp
                 FromPort: 0
@@ -83,18 +82,18 @@ Resources:
     EC2ECRRole:
         Type: 'AWS::IAM::Role'
         Properties:
-        RoleName: "EC2Role-ECR-TechDay"
-        AssumeRolePolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-            - Effect: Allow
-              Principal:
-              Service:
-                - ec2.amazonaws.com
-            Action:
-              - "sts:AssumeRole"
-      ManagedPolicyArns: 
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+            RoleName: EC2RoleECRTechDay
+            AssumeRolePolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                - Effect: Allow
+                Principal:
+                Service:
+                    - ec2.amazonaws.com
+                Action:
+                    - "sts:AssumeRole"
+                ManagedPolicyArns: 
+                    - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
     #Instance profile
     EC2InstanceECRProfile:
@@ -115,21 +114,24 @@ Resources:
             KeyName: !Ref MasterKeyPair
             InstanceType: t2.medium
             UserData: 
-            !Base64 | 
-                #!/bin/bash
-                sudo yum update -y
-                sudo yum install -y git
-                sudo amazon-linux-extras install -y docker
-                sudo service docker start
-                sudo amazon-linux-extras install -y java-openjdk11
-                cd home/ec2-user
-                git clone https://github.com/Github-JS-Ravas/AWS-CFN.git
-                cd Docker
-                sudo docker build . -t ECRImageDockerfile
-            # docker tag ECRImageBuild:latest <‘account’>.dkr.ecr.us-east-1.amazonaws.com/ECRImageBuild:latest
-            # docker push <‘account’>.dkr.ecr.us-east-1.amazonaws.com/ECRImageBuild:latest
+                !Base64 | 
+                    #!/bin/bash
+                    sudo yum update -y
+                    sudo yum install -y git
+                    sudo amazon-linux-extras install -y docker
+                    sudo service docker start
+                    sudo amazon-linux-extras install -y java-openjdk11
+                    cd home/ec2-user
+                    git clone https://github.com/Github-JS-Ravas/AWS-CFN.git
+                    cd Docker
+                    sudo docker build . -t ECRImageDockerfile
+                # docker tag ECRImageBuild:latest <‘account’>.dkr.ecr.us-east-1.amazonaws.com/ECRImageBuild:latest
+                # docker push <‘account’>.dkr.ecr.us-east-1.amazonaws.com/ECRImageBuild:latest
 
-            # docker run -p 8080:8080 --name ECRImageDockerfile ECRImageDockerfile   
+                # docker run -p 8080:8080 --name ECRImageDockerfile ECRImageDockerfile   
 
 Outputs:
+    PublicDNSAWSServer01:
+        Description: 'Public DNSName of the Docker EC2 Instance'
+        Value: !GetAtt UseDockerToCreateAndPushToECR.PublicDnsName
     

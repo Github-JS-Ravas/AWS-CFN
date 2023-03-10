@@ -38,6 +38,9 @@ Resources:
     InternetGateway: # Match to TD Resources
         Type: AWS::EC2::InternetGateway
         Properties:
+            Tags:
+              - Key: Name
+                Value: 'VPCIGW'
 
     # Attach the Internet Gateway to the VPC
     InternetGatewayAttachment: # Match to TD Resources
@@ -59,13 +62,9 @@ Resources:
     CloudSentryEC2SecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
-          GroupName: "Cloud Sentry EC2 Security Group"
-          GroupDescription: 'Allow HTTPS inbound & outbound traffic'
-            SecurityGroupIngress:
-              - IpProtocol: tcp
-                FromPort: 443
-                ToPort: 443
-                CidrIp: 0.0.0.0/0
+            GroupName: "Cloud Sentry EC2 Security Group"
+            GroupDescription: 'Allow HTTPS inbound & outbound traffic'
+            VpcId: !Ref VPC
             SecurityGroupEgress:
               - IpProtocol: tcp
                 FromPort: 0
@@ -74,20 +73,20 @@ Resources:
 
     #EC2 Role to be assumed and use to create the EC2 resources also allows SSM deployment.
     EC2Role:
-        Type: 'AWS::IAM::Role'
+        Type: AWS::IAM::Role
         Properties:
-        RoleName: "EC2Role-TechDay"
-        AssumeRolePolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-            - Effect: Allow
-              Principal:
-              Service:
-                - ec2.amazonaws.com
-            Action:
-              - "sts:AssumeRole"
-      ManagedPolicyArns: 
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+            RoleName: 'EC2RoleTechDay'
+            AssumeRolePolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                - Effect: Allow
+                Principal:
+                Service:
+                    - ec2.amazonaws.com
+                Action:
+                    - "sts:AssumeRole"
+            ManagedPolicyArns: 
+                - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
 
     #Instance profile
@@ -99,7 +98,7 @@ Resources:
                 - !Ref EC2Role
     
     # Create first EC2 machine
-    AWS-Server01:
+    AWSServer01:
         Type: 'AWS::EC2::Instance'
         Properties:
             ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
@@ -111,7 +110,7 @@ Resources:
               - !Ref CloudSentryEC2SecurityGroup
 
     # Create second EC2 machine
-    AWS-Server02:
+    AWSServer02:
         Type: 'AWS::EC2::Instance'
         Properties:
             ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
@@ -123,7 +122,7 @@ Resources:
               - !Ref CloudSentryEC2SecurityGroup
 
     # Create third EC2 machine
-    AWS-Server03:
+    AWSServer03:
         Type: 'AWS::EC2::Instance'
         Properties:
             ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
@@ -142,14 +141,14 @@ Resources:
                     wget https://github.com/stinky-fox/my-malware-collection/blob/main/Trojan.W97M.CVE201711882.XQUOOZY/55037DDED7E87A35B980324B49C155D5DB3E4BF1.zip
 
 Outputs:
-    PublicDNS:
+    PublicDNSAWSServer01:
         Description: 'Public DNSName of the first EC2 Instance'
-        Value: !GetAtt AWS-Server01.PublicDnsName
+        Value: !GetAtt AWSServer01.PublicDnsName
 
-    PublicDNS:
-        Description: 'Public DNSName of the first EC2 Instance'
-        Value: !GetAtt AWS-Server02.PublicDnsName
+    PublicDNSAWSServer02:
+        Description: 'Public DNSName of the second EC2 Instance'
+        Value: !GetAtt AWSServer02.PublicDnsName
 
-    PublicDNS:
-        Description: 'Public DNSName of the first EC2 Instance'
-        Value: !GetAtt AWS-Server03.PublicDnsName
+    PublicDNSAWSServer03:
+        Description: 'Public DNSName of the third EC2 Instance'
+        Value: !GetAtt AWSServer03.PublicDnsName
