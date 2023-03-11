@@ -1,0 +1,178 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: "Create 3 x Amazon EC2 instance running the Amazon Linux 2 AMI"
+
+Parameters:
+
+    MasterKeyName: # Match to TD Resources
+        Description: 'Name of an existing EC2 KeyPair to enable SSH access to the instance'
+        Type: 'AWS::EC2::KeyPair::KeyName'
+        ConstraintDescription: 'Must be the name of an existing EC2 KeyPair.'
+
+    InspectionVPCCIDR: # Match to TD Resources
+        Description: 'Please enter the IP range (CIDR notation) for the top level VPC'
+        Type: String
+        Default: 10.10.0.0/16
+
+    ProtectedPublicSubnetCIDR: # Match to TD Resources
+        Description: 'Please enter the IP range (CIDR notation) for a PROTECTED-PUBLIC subnet'
+        Type: String
+        Default: 10.10.10.0/24
+
+    ProtectedPublicSubnetAZ: # Match to TD Resources
+        Description: 'Please enter the Availability Zone that you want to use for the PROTECTED-PUBLIC subnet'
+        Type: String
+        Default: us-east-1a
+
+
+Resources:
+    # Create a VPC
+    VPC: # Match to TD Resources
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: !Ref InspectionVPCCIDR
+            EnableDnsSupport: true
+            EnableDnsHostnames: true
+
+    # Create an Internet Gateway
+    InternetGateway: # Match to TD Resources
+        Type: AWS::EC2::InternetGateway
+        Properties:
+            Tags:
+              - Key: Name
+                Value: 'VPCIGW'
+
+    # Attach the Internet Gateway to the VPC
+    InternetGatewayAttachment: # Match to TD Resources
+        Type: AWS::EC2::VPCGatewayAttachment
+        Properties:
+            InternetGatewayId: !Ref InternetGateway
+            VpcId: !Ref VPC
+    
+    # Create a Protected Public Subnet
+    ProtectedPublicSubnet: #Match to TD Resources
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref VPC
+            AvailabilityZone: !Ref ProtectedPublicSubnetAZ
+            CidrBlock: !Ref ProtectedPublicSubnetCIDR
+            MapPublicIpOnLaunch: true
+
+    # Create Security Group for EC2 instances
+    CloudSentryEC2SecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupName: "Cloud Sentry EC2 Security Group"
+            GroupDescription: 'Allow HTTPS inbound & outbound traffic'
+            VpcId: !Ref VPC
+            SecurityGroupEgress:
+              - IpProtocol: tcp
+                FromPort: 0
+                ToPort: 65535
+                CidrIp: 0.0.0.0/0
+
+    #EC2 Role to be assumed and use to create the EC2 resources also allows SSM deployment.
+    EC2Role:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: EC2RoleTechDay
+            AssumeRolePolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                    Effect: Allow
+                    Principal: 
+                        Service:
+                            - ec2.amazonaws.com
+                    Action:
+                        - "sts:AssumeRole"
+            ManagedPolicyArns: 
+                - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+    #Instance profile
+    EC2InstanceProfile:
+        Type: 'AWS::IAM::InstanceProfile'
+        Properties:
+            Path: /
+            Roles:
+                - !Ref EC2Role
+    
+    # Create first EC2 machine
+    AWSServer01:
+        Type: 'AWS::EC2::Instance'
+        Properties:
+            ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
+            InstanceType: t3.micro
+            KeyName: !Ref MasterKeyName
+            SubnetId: !Ref ProtectedPublicSubnet
+            SecurityGroupIds:
+              - !Ref CloudSentryEC2SecurityGroup
+            UserData: 
+                !Base64 | 
+                    #!/bin/bash
+                    sudo yum update -y
+                    sudo yum install -y wget
+                    sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+                    sudo systemctl enable amazon-ssm-agent
+                    sudo systemctl start amazon-ssm-agent
+
+    # Create second EC2 machine
+    AWSServer02:
+        Type: 'AWS::EC2::Instance'
+        Properties:
+            ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
+            InstanceType: t3.micro
+            KeyName: !Ref MasterKeyName
+            SubnetId: !Ref ProtectedPublicSubnet
+            SecurityGroupIds:
+              - !Ref CloudSentryEC2SecurityGroup
+            UserData: 
+                !Base64 | 
+                    #!/bin/bash
+                    sudo yum update -y
+                    sudo yum install -y wget
+                    sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+                    sudo systemctl enable amazon-ssm-agent
+                    sudo systemctl start amazon-ssm-agent
+
+    # Create third EC2 machine
+    AWSServer03:
+        Type: 'AWS::EC2::Instance'
+        Properties:
+            ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
+            InstanceType: t3.micro
+            KeyName: !Ref MasterKeyName
+            SubnetId: !Ref ProtectedPublicSubnet
+            SecurityGroupIds:
+              - !Ref CloudSentryEC2SecurityGroup
+            UserData: 
+                !Base64 | 
+                    #!/bin/bash
+                    sudo yum update -y
+                    sudo yum install -y wget
+                    sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+                    sudo systemctl enable amazon-ssm-agent
+                    sudo systemctl start amazon-ssm-agent
+                    mkdir /home/centos/documents/central
+                    cd /home/centos/documents/central
+                    wget https://github.com/stinky-fox/my-malware-collection/blob/main/Trojan.W97M.CVE201711882.XQUOOZY/55037DDED7E87A35B980324B49C155D5DB3E4BF1.zip
+
+    # Create ECR Repository
+    AWSECRRepo:
+        Type: AWS::ECR::Repository
+        Properties: 
+            RepositoryName: td-ecr-repo
+            ImageScanningConfiguration: 
+                ScanOnPush: false
+
+Outputs:
+    PublicDNSAWSServer01:
+        Description: 'Public DNSName of the first EC2 Instance'
+        Value: !GetAtt AWSServer01.PublicDnsName
+
+    PublicDNSAWSServer02:
+        Description: 'Public DNSName of the second EC2 Instance'
+        Value: !GetAtt AWSServer02.PublicDnsName
+
+    PublicDNSAWSServer03:
+        Description: 'Public DNSName of the third EC2 Instance'
+        Value: !GetAtt AWSServer03.PublicDnsName
