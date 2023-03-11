@@ -75,19 +75,18 @@ Resources:
     EC2Role:
         Type: AWS::IAM::Role
         Properties:
-            RoleName: 'EC2RoleTechDay'
+            RoleName: EC2RoleTechDay
             AssumeRolePolicyDocument:
                 Version: "2012-10-17"
                 Statement:
-                - Effect: Allow
-                Principal:
-                Service:
-                    - ec2.amazonaws.com
-                Action:
-                    - "sts:AssumeRole"
+                    Effect: Allow
+                    Principal: 
+                        Service:
+                            - ec2.amazonaws.com
+                    Action:
+                        - "sts:AssumeRole"
             ManagedPolicyArns: 
                 - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-
 
     #Instance profile
     EC2InstanceProfile:
@@ -104,10 +103,17 @@ Resources:
             ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
             InstanceType: t3.micro
             KeyName: !Ref MasterKeyName
-            HostId: "AWS-Server01"
             SubnetId: !Ref ProtectedPublicSubnet
             SecurityGroupIds:
               - !Ref CloudSentryEC2SecurityGroup
+            UserData: 
+                !Base64 | 
+                    #!/bin/bash
+                    sudo yum update -y
+                    sudo yum install -y wget
+                    sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+                    sudo systemctl enable amazon-ssm-agent
+                    sudo systemctl start amazon-ssm-agent
 
     # Create second EC2 machine
     AWSServer02:
@@ -116,10 +122,17 @@ Resources:
             ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
             InstanceType: t3.micro
             KeyName: !Ref MasterKeyName
-            HostId: AWS-Server02
             SubnetId: !Ref ProtectedPublicSubnet
             SecurityGroupIds:
               - !Ref CloudSentryEC2SecurityGroup
+            UserData: 
+                !Base64 | 
+                    #!/bin/bash
+                    sudo yum update -y
+                    sudo yum install -y wget
+                    sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+                    sudo systemctl enable amazon-ssm-agent
+                    sudo systemctl start amazon-ssm-agent
 
     # Create third EC2 machine
     AWSServer03:
@@ -128,7 +141,6 @@ Resources:
             ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
             InstanceType: t3.micro
             KeyName: !Ref MasterKeyName
-            HostId: AWS-Server03
             SubnetId: !Ref ProtectedPublicSubnet
             SecurityGroupIds:
               - !Ref CloudSentryEC2SecurityGroup
@@ -136,9 +148,21 @@ Resources:
                 !Base64 | 
                     #!/bin/bash
                     sudo yum update -y
-                    sudo yum install -y git
-                    cd home/ec2-user
+                    sudo yum install -y wget
+                    sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+                    sudo systemctl enable amazon-ssm-agent
+                    sudo systemctl start amazon-ssm-agent
+                    mkdir /home/centos/documents/central
+                    cd /home/centos/documents/central
                     wget https://github.com/stinky-fox/my-malware-collection/blob/main/Trojan.W97M.CVE201711882.XQUOOZY/55037DDED7E87A35B980324B49C155D5DB3E4BF1.zip
+
+    # Create ECR Repository
+    AWSECRRepo:
+        Type: AWS::ECR::Repository
+        Properties: 
+            RepositoryName: td-ecr-repo
+            ImageScanningConfiguration: 
+                ScanOnPush: false
 
 Outputs:
     PublicDNSAWSServer01:

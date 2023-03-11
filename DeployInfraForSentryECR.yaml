@@ -80,20 +80,20 @@ Resources:
 
     #EC2 Role to be assumed and use to create the EC2 resources also allows SSM deployment.
     EC2ECRRole:
-        Type: 'AWS::IAM::Role'
+        Type: AWS::IAM::Role
         Properties:
             RoleName: EC2RoleECRTechDay
             AssumeRolePolicyDocument:
                 Version: "2012-10-17"
                 Statement:
-                - Effect: Allow
-                Principal:
-                Service:
-                    - ec2.amazonaws.com
-                Action:
-                    - "sts:AssumeRole"
-                ManagedPolicyArns: 
-                    - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+                    Effect: Allow
+                    Principal: 
+                        Service:
+                            - ec2.amazonaws.com
+                    Action:
+                        - "sts:AssumeRole"
+            ManagedPolicyArns: 
+                - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
     #Instance profile
     EC2InstanceECRProfile:
@@ -131,7 +131,7 @@ Resources:
                 # docker run -p 8080:8080 --name ECRImageDockerfile ECRImageDockerfile   
 
 Outputs:
-    PublicDNSAWSServer01:
+    PublicDNSUseDockerToCreateAndPushToECR:
         Description: 'Public DNSName of the Docker EC2 Instance'
         Value: !GetAtt UseDockerToCreateAndPushToECR.PublicDnsName
     
