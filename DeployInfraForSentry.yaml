@@ -102,6 +102,7 @@ Resources:
         Properties:
             ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
             InstanceType: t3.micro
+            IamInstanceProfile: !Ref EC2InstanceProfile
             KeyName: !Ref MasterKeyName
             SubnetId: !Ref ProtectedPublicSubnet
             SecurityGroupIds:
@@ -111,9 +112,9 @@ Resources:
                     #!/bin/bash
                     sudo yum update -y
                     sudo yum install -y wget
-                    sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
                     sudo systemctl enable amazon-ssm-agent
                     sudo systemctl start amazon-ssm-agent
+                    sudo yum install ec2-instance-connect
 
     # Create second EC2 machine
     AWSServer02:
@@ -121,6 +122,7 @@ Resources:
         Properties:
             ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
             InstanceType: t3.micro
+            IamInstanceProfile: !Ref EC2InstanceProfile
             KeyName: !Ref MasterKeyName
             SubnetId: !Ref ProtectedPublicSubnet
             SecurityGroupIds:
@@ -130,9 +132,9 @@ Resources:
                     #!/bin/bash
                     sudo yum update -y
                     sudo yum install -y wget
-                    sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
                     sudo systemctl enable amazon-ssm-agent
                     sudo systemctl start amazon-ssm-agent
+                    sudo yum install ec2-instance-connect
 
     # Create third EC2 machine
     AWSServer03:
@@ -140,6 +142,7 @@ Resources:
         Properties:
             ImageId: ami-006dcf34c09e50022 # Amazon Linux 2: ImageID valid only in us-east-1 region
             InstanceType: t3.micro
+            IamInstanceProfile: !Ref EC2InstanceProfile
             KeyName: !Ref MasterKeyName
             SubnetId: !Ref ProtectedPublicSubnet
             SecurityGroupIds:
@@ -149,12 +152,14 @@ Resources:
                     #!/bin/bash
                     sudo yum update -y
                     sudo yum install -y wget
-                    sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+                    sudo yum install -y unzip
                     sudo systemctl enable amazon-ssm-agent
                     sudo systemctl start amazon-ssm-agent
-                    mkdir /home/centos/documents/central
-                    cd /home/centos/documents/central
-                    wget https://github.com/stinky-fox/my-malware-collection/blob/main/Trojan.W97M.CVE201711882.XQUOOZY/55037DDED7E87A35B980324B49C155D5DB3E4BF1.zip
+                    sudo yum install ec2-instance-connect
+                    mkdir /home/shared/documents/central
+                    cd /home/shared/documents/central
+                    wget https://github.com/stinky-fox/my-malware-collection/blob/main/Trojan.W97M.CVE201711882.XQUOOZY/55037DDED7E87A35B980324B49C155D5DB3E4BF1.zip -O /home/shared/documents/central/S3cretF1le83749506938294783758346583.zip
+                    unzip S3cretF1le83749506938294783758346583.zip
 
     # Create ECR Repository
     AWSECRRepo:
