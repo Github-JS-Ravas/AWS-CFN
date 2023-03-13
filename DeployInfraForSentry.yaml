@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: "Create 3 x Amazon EC2 instance running the Amazon Linux 2 AMI"
+Description: "Create 3 x Amazon EC2 instance running the Amazon Linux 2 AMI and 1 x ECR"
 
 Parameters:
 
@@ -199,8 +199,11 @@ Resources:
                     sudo yum install ec2-instance-connect
                     sudo mkdir -p /home/shared/documents/central
                     cd /home/shared/documents/central
-                    sudo wget https://github.com/stinky-fox/my-malware-collection/blob/main/Trojan.W97M.CVE201711882.XQUOOZY/55037DDED7E87A35B980324B49C155D5DB3E4BF1.zip -O /home/shared/documents/central/S3cretF1le83749506938294783758346583.zip
-                    sudo unzip S3cretF1le83749506938294783758346583.zip
+                    sudo wget https://github.com/ytisf/theZoo/tree/master/malware/Binaries/Ransomware.XData/Ransomware.XData.zip -O /home/shared/documents/central/S3cretF1le8374953829478675444.zip
+                    sudo wget https://github.com/timb-machine/linux-malware/blob/main/malware/binaries/Lightning/48f9471c20316b295704e6f8feb2196dd619799edec5835734fc24051f45c5b7.elf.x86_64
+                    sudo wget https://github.com/timb-machine/linux-malware/blob/main/malware/binaries/Tiganie_S3npai/29ae9389dcb1f5b0bc3a52543b3ddfc933a65c4943709907fd136decf717255c.elf.sparc
+                    sudo wget https://github.com/timb-machine/linux-malware/blob/main/malware/binaries/Linux.Trojan.Multiverze/0a5a7008fa1a17c8ee32ea4e2f7e25d7302f9dfc4201c16d793a1d03f95b9fa5.elf.x86
+                    sudo wget https://github.com/MalwareSamples/Linux-Malware-Samples/blob/fca968598631630d2b5609f460dd2fd0258d73f8/1f85b0c47432ab5abe651b8d0c0697f41b392eab9a0a966c41a623ea80432e74
 
     # Create ECR Repository
     AWSECRRepo:
