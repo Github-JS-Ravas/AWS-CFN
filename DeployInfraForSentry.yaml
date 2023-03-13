@@ -58,13 +58,54 @@ Resources:
             CidrBlock: !Ref ProtectedPublicSubnetCIDR
             MapPublicIpOnLaunch: true
 
+    #Creating the Elastic IP for the NAT Gateway
+    NatGatewayEIP:
+        Type: AWS::EC2::EIP
+        DependsOn: InternetGatewayAttachment
+        Properties:
+            Domain: vpc
+
+    #Creating the NAT Gateway that will be use in the Protected-Public Subnet
+    NatGateway:
+        Type: AWS::EC2::NatGateway
+        Properties:
+            AllocationId: !GetAtt NatGatewayEIP.AllocationId
+            SubnetId: !Ref ProtectedPublicSubnet
+
+    #Creating the Public Route table
+    PublicRouteTable:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId: !Ref VPC
+    
+    #Add a default route in the Public Route table
+    DefaultPublicRoute:
+        Type: AWS::EC2::Route
+        DependsOn: InternetGatewayAttachment
+        Properties:
+            RouteTableId: !Ref PublicRouteTable
+            DestinationCidrBlock: 0.0.0.0/0
+            GatewayId: !Ref InternetGateway
+
+    #Associating the Protected-Public Subnet in the Public Route Table (Edge Association)
+    ProtectedPublicSubnetRouteTableAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            RouteTableId: !Ref PublicRouteTable
+            SubnetId: !Ref ProtectedPublicSubnet
+
     # Create Security Group for EC2 instances
     CloudSentryEC2SecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
             GroupName: "Cloud Sentry EC2 Security Group"
-            GroupDescription: 'Allow HTTPS inbound & outbound traffic'
+            GroupDescription: 'Allow SSH inbound & outbound traffic'
             VpcId: !Ref VPC
+            SecurityGroupIngress:
+              - IpProtocol: tcp
+                FromPort: 22
+                ToPort: 22
+                CidrIp: 0.0.0.0/0
             SecurityGroupEgress:
               - IpProtocol: tcp
                 FromPort: 0
@@ -156,10 +197,10 @@ Resources:
                     sudo systemctl enable amazon-ssm-agent
                     sudo systemctl start amazon-ssm-agent
                     sudo yum install ec2-instance-connect
-                    mkdir /home/shared/documents/central
+                    sudo mkdir -p /home/shared/documents/central
                     cd /home/shared/documents/central
-                    wget https://github.com/stinky-fox/my-malware-collection/blob/main/Trojan.W97M.CVE201711882.XQUOOZY/55037DDED7E87A35B980324B49C155D5DB3E4BF1.zip -O /home/shared/documents/central/S3cretF1le83749506938294783758346583.zip
-                    unzip S3cretF1le83749506938294783758346583.zip
+                    sudo wget https://github.com/stinky-fox/my-malware-collection/blob/main/Trojan.W97M.CVE201711882.XQUOOZY/55037DDED7E87A35B980324B49C155D5DB3E4BF1.zip -O /home/shared/documents/central/S3cretF1le83749506938294783758346583.zip
+                    sudo unzip S3cretF1le83749506938294783758346583.zip
 
     # Create ECR Repository
     AWSECRRepo:
