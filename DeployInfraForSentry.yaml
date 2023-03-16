@@ -24,7 +24,6 @@ Parameters:
         Type: String
         Default: us-east-1a
 
-
 Resources:
     # Create a VPC
     VPC: # Match to TD Resources
@@ -200,6 +199,7 @@ Resources:
                     sudo mkdir -p /home/shared/documents/central
                     cd /home/shared/documents/central
                     sudo wget https://github.com/ytisf/theZoo/tree/master/malware/Binaries/Ransomware.XData/Ransomware.XData.zip -O /home/shared/documents/central/S3cretF1le8374953829478675444.zip
+                    sudo wget http://www.eicar.org/download/eicar.com.txt -O Document-624352345276-Temp.pdf
                     sudo wget https://github.com/timb-machine/linux-malware/blob/main/malware/binaries/Lightning/48f9471c20316b295704e6f8feb2196dd619799edec5835734fc24051f45c5b7.elf.x86_64
                     sudo wget https://github.com/timb-machine/linux-malware/blob/main/malware/binaries/Tiganie_S3npai/29ae9389dcb1f5b0bc3a52543b3ddfc933a65c4943709907fd136decf717255c.elf.sparc
                     sudo wget https://github.com/timb-machine/linux-malware/blob/main/malware/binaries/Linux.Trojan.Multiverze/0a5a7008fa1a17c8ee32ea4e2f7e25d7302f9dfc4201c16d793a1d03f95b9fa5.elf.x86
