@@ -1,0 +1,37 @@
+Resources:
+  LambdaRoleTest:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: "Lambda-Test-Policy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: ['cloudformation:Describe*', 'cloudformation:List*', 'cloudformation:Get*']
+                Resource: '*'
+
+  CloudSentryLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - x86_64
+      Code:
+        S3Bucket: techday-2023-1-eciar
+        S3Key: SentryEciar.zip
+      FunctionName: "AWS-Lambda-ScriptCall"
+      Handler: index.lambda_handler
+      Runtime: python3.9
+      Role: !GetAtt
+        - LambdaRoleTest
+        - Arn
